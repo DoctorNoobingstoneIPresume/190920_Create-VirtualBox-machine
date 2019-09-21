@@ -1,0 +1,144 @@
+#!/bin/bash
+
+
+
+# [2019-09-21]
+#   I use the "cygwin-" prefix to differentiate between Cygwin tools and Windows tools with the same name.
+#   Examples: "date", "sort"...
+#   You might want to search and replace "cygwin-" with "" (i.e. nothing).
+
+
+
+set -e -o pipefail
+
+
+
+function Create ()
+{
+	which VBoxManage
+	
+	local tNow="$(cygwin-date +"%y%m%d-%H%M%S")"
+	local tUse="190921-010546"
+	echo "tNow ${tNow}, tUse {$tUse}..."
+	
+	local sName="${tUse}_MyVM"
+	
+	
+	
+	if ((1)); then
+		if [ -d "${sName}/" ]; then
+			echo "Unregistering \"${sName}\..."
+			set +e
+			VBoxManage unregistervm "${sName}"
+			mv "${sName}/"          "${sName}_${tNow}"
+			set -e
+			echo
+		fi
+		
+		if true; then
+			echo "Creating machine \"${sName}\"..."
+			if   [ -d "${sName}/" ]; then echo "\"${sName}\" is already a folder !"; exit 1; fi
+			VBoxManage createvm --name "${sName}" --ostype "ArchLinux" --register
+			if ! [ -d "${sName}/" ]; then echo "\"${sName}\" is not a folder !"    ; exit 1; fi
+			echo
+		fi
+	fi
+	
+	
+	
+	if ((0)); then
+		echo "Showing..."
+		VBoxManage showvminfo "${sName}"
+		echo
+	fi
+	
+	
+	
+	if ((1)); then
+		echo "Modifying..."
+		VBoxManage modifyvm "${sName}" \
+			--memory                   512        \
+			--vram                      32        \
+			--ioapic                   on         \
+			--rtcuseutc                on         \
+			--cpus                       2        \
+			--accelerate2dvideo        off        \
+			--accelerate3d             on         \
+			\
+			--bioslogoimagepath        "F:/Adder/My Pictures/Girls/Lisa Boyle/Lisa Boyle 001 r.bmp" \
+			--boot1                    "none"     \
+			--boot2                    "dvd"      \
+			--boot3                    "disk"     \
+			--boot4                    "none"     \
+		
+		VBoxManage storagectl "${sName}" --name "IDE"  --add "ide"
+		VBoxManage storagectl "${sName}" --name "SATA" --add "sata"
+		
+		echo
+	fi
+	
+	
+	
+	if ((0)); then
+		echo "Showing..."
+		VBoxManage showvminfo "${sName}"
+		echo
+	fi
+	
+	
+	
+	echo
+	
+	if ((1)); then
+		echo "Creating disks..."
+		
+		# [2019-09-21] For transferring to (FAT32) USB memory sticks, we should choose 2-GiB-chunk splitting of big virtual disks.
+		#sVariant="Split2G"
+		sVariant="Standard"
+		
+		local asDisks=()
+		{
+			asDisks+=("Root;8192")
+			asDisks+=("Swap;2048")
+			asDisks+=("Home;4096")
+			asDisks+=("DevKits;32768")
+		}
+		
+		local iDisk=0
+		local sDisk
+		for sDisk in "${asDisks[@]}"; do
+			#echo "\"${sDisk}\""
+			local asSubDisks=()
+			{
+				IFS=";" read -r -a asSubDisks <<< "${sDisk}"
+				
+				#local sSubDisk
+				#for sSubDisk in "${asSubDisks[@]}"; do
+				#	echo "    \"${sSubDisk}\""
+				#done
+				
+				local sDiskName="${asSubDisks[0]}"
+				local sDiskSize="${asSubDisks[1]}"
+				printf "    %-16s %'9u\n" "${sDiskName}" "${sDiskSize}"
+				
+				set +e
+				VBoxManage closemedium  disk                                                 "${sName}/${sDiskName}.vmdk" --delete >/dev/null 2>&1
+				set -e
+				VBoxManage createmedium disk --format "VMDK" --variant "Standard" --filename "${sName}/${sDiskName}.vmdk" --size "${sDiskSize}"
+				VBoxManage storageattach "${sName}" --storagectl "SATA" --port "${iDisk}" --type "hdd" --medium "${sName}/${sDiskName}.vmdk" --mtype "normal"
+			}
+			
+			((++iDisk))
+		done
+		
+		echo
+	fi
+	
+	
+	
+	echo "Done !"
+	echo
+}
+
+Create
+if [ $? -ne 0 ]; then echo "Error $? !"; fi
