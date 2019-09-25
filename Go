@@ -1,16 +1,5 @@
 #!/bin/bash
-
-
-
-# [2019-09-21]
-#   I use the "cygwin-" prefix to differentiate between Cygwin tools and Windows tools with the same name.
-#   Examples: "date", "sort"...
-#   You might want to search and replace "cygwin-" with "" (i.e. nothing).
-
-
-
 set -e -o pipefail
-
 
 
 function Create ()
@@ -18,10 +7,11 @@ function Create ()
 	which VBoxManage
 	
 	local tNow="$(cygwin-date +"%y%m%d-%H%M%S")"
-	local tUse="190921-010546"
+	local tUse="190925-141300"
+	#local tUse="${tNow}"
 	echo "tNow ${tNow}, tUse {$tUse}..."
 	
-	local sName="${tUse}_MyVM"
+	local sName="${tUse}_Deborah"
 	
 	
 	
@@ -38,7 +28,7 @@ function Create ()
 		if true; then
 			echo "Creating machine \"${sName}\"..."
 			if   [ -d "${sName}/" ]; then echo "\"${sName}\" is already a folder !"; exit 1; fi
-			VBoxManage createvm --name "${sName}" --ostype "ArchLinux" --register
+			VBoxManage createvm --name "${sName}" --ostype "Debian_64" --register
 			if ! [ -d "${sName}/" ]; then echo "\"${sName}\" is not a folder !"    ; exit 1; fi
 			echo
 		fi
@@ -57,19 +47,22 @@ function Create ()
 	if ((1)); then
 		echo "Modifying..."
 		VBoxManage modifyvm "${sName}" \
-			--memory                   512        \
-			--vram                      32        \
-			--ioapic                   on         \
-			--rtcuseutc                on         \
-			--cpus                       2        \
-			--accelerate2dvideo        off        \
-			--accelerate3d             on         \
+			--memory                   2048          \
+			--vram                       32          \
+			--ioapic                   on            \
+			--rtcuseutc                on            \
+			--cpus                        2          \
+			--accelerate2dvideo        off           \
+			--accelerate3d             on            \
+			\
+			--clipboard                bidirectional \
+			--draganddrop              bidirectional \
 			\
 			--bioslogoimagepath        "F:/Adder/My Pictures/Girls/Lisa Boyle/Lisa Boyle 001 r.bmp" \
-			--boot1                    "none"     \
-			--boot2                    "dvd"      \
-			--boot3                    "disk"     \
-			--boot4                    "none"     \
+			--boot1                    "none"        \
+			--boot2                    "dvd"         \
+			--boot3                    "disk"        \
+			--boot4                    "none"        \
 		
 		VBoxManage storagectl "${sName}" --name "IDE"  --add "ide"
 		VBoxManage storagectl "${sName}" --name "SATA" --add "sata"
@@ -92,13 +85,14 @@ function Create ()
 	if ((1)); then
 		echo "Creating disks..."
 		
-		# [2019-09-21] For transferring to (FAT32) USB memory sticks, we should choose 2-GiB-chunk splitting of big virtual disks.
+		#VBoxManage storageattach "${sName}" --storagectl "IDE" --port "0" --device "0" --type "dvddrive" --medium "none"
+		
 		#sVariant="Split2G"
 		sVariant="Standard"
 		
 		local asDisks=()
 		{
-			asDisks+=("Root;8192")
+			asDisks+=("Root;16384")
 			asDisks+=("Swap;2048")
 			asDisks+=("Home;4096")
 			asDisks+=("DevKits;32768")
@@ -131,13 +125,19 @@ function Create ()
 			((++iDisk))
 		done
 		
+		#VBoxManage createmedium disk --format "VMDK" --variant "${sVariant}" --filename "${sName}/Root"    --size  8192
+		#VBoxManage createmedium disk --format "VMDK" --variant "${sVariant}" --filename "${sName}/Swap"    --size  2048
+		#VBoxManage createmedium disk --format "VMDK" --variant "${sVariant}" --filename "${sName}/Home"    --size  4096
+		#VBoxManage createmedium disk --format "VMDK" --variant "${sVariant}" --filename "${sName}/DevKits" --size 32768
+		#
+		#VBoxManage storageattach "${sName}" --storagectl "SATA" --type "hdd" --medium   "${sName}/Root"    --mtype "normal"
+		
 		echo
 	fi
 	
 	
 	
-	echo "Done !"
-	echo
+	echo "Hello, World !"
 }
 
 Create
