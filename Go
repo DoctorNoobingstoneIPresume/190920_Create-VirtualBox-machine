@@ -58,7 +58,7 @@ function Create ()
 			--clipboard                bidirectional \
 			--draganddrop              bidirectional \
 			\
-			--bioslogoimagepath        "F:/Adder/My Pictures/Girls/Lisa Boyle/Lisa Boyle 001 r.bmp" \
+			--bioslogoimagepath        "lisa-boyle-photo_61764_33628_r.bmp" \
 			--boot1                    "none"        \
 			--boot2                    "dvd"         \
 			--boot3                    "disk"        \
