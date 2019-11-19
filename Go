@@ -2,13 +2,26 @@
 set -e -o pipefail
 
 
+## [2019-11-19]
+## 
+##   This script should be in the folder with VirtualBox virtual machines.
+##   
+##   After having run it, please modify the generated .vbox file:
+##     Change
+##       <Logo fadeIn="true" fadeOut="true" displayTime="0" imagePath="Isabeau-1-cropped.bmp"/>
+##     to
+##       <Logo fadeIn="true" fadeOut="true" displayTime="0" imagePath="G:/VM_G/191119-015328_Deborah/Isabeau-1-cropped.bmp"/>
+##     (of course, replacing with the full pathname of where the image resides).
+##     This enables the boot logo image.
+
+
 function Create ()
 {
 	which VBoxManage
 	
 	local tNow="$(cygwin-date +"%y%m%d-%H%M%S")"
-	local tUse="190925-141300"
-	#local tUse="${tNow}"
+	#local tUse="190925-141300"
+	local tUse="${tNow}"
 	echo "tNow ${tNow}, tUse {$tUse}..."
 	
 	local sName="${tUse}_Deborah"
@@ -58,7 +71,7 @@ function Create ()
 			--clipboard                bidirectional \
 			--draganddrop              bidirectional \
 			\
-			--bioslogoimagepath        "lisa-boyle-photo_61764_33628_r.bmp" \
+			--bioslogoimagepath        "Isabeau-1-cropped.bmp" \
 			--boot1                    "none"        \
 			--boot2                    "dvd"         \
 			--boot3                    "disk"        \
@@ -92,7 +105,7 @@ function Create ()
 		
 		local asDisks=()
 		{
-			asDisks+=("Root;16384")
+			asDisks+=("Root;32768")
 			asDisks+=("Swap;2048")
 			asDisks+=("Home;4096")
 			asDisks+=("DevKits;32768")
@@ -124,13 +137,6 @@ function Create ()
 			
 			((++iDisk))
 		done
-		
-		#VBoxManage createmedium disk --format "VMDK" --variant "${sVariant}" --filename "${sName}/Root"    --size  8192
-		#VBoxManage createmedium disk --format "VMDK" --variant "${sVariant}" --filename "${sName}/Swap"    --size  2048
-		#VBoxManage createmedium disk --format "VMDK" --variant "${sVariant}" --filename "${sName}/Home"    --size  4096
-		#VBoxManage createmedium disk --format "VMDK" --variant "${sVariant}" --filename "${sName}/DevKits" --size 32768
-		#
-		#VBoxManage storageattach "${sName}" --storagectl "SATA" --type "hdd" --medium   "${sName}/Root"    --mtype "normal"
 		
 		echo
 	fi
