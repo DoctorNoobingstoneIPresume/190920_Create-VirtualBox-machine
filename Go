@@ -129,9 +129,14 @@ function Create ()
 			##     its virtual disk need not occupy space when the virtual machine is powered off.
 			
 			asDisks+=("Root   ; 1048576; normal   ")     # 32768
-			asDisks+=("Swap   ; 1048576; immutable")     #  2048
+			asDisks+=("Swap   ; 1048576; normal   ")     #  2048
 			asDisks+=("Home   ; 1048576; normal   ")     #  4096
-			asDisks+=("DevKits; 1048576; normal   ")     # 32768
+			#asDisks+=("DevKits; 1048576; normal   ")     # 32768
+			#asDisks+=("Work   ; 1048576; normal   ")     # 32768
+			#asDisks+=("Play   ; 1048576; normal   ")     # 32768
+			#asDisks+=("Hack   ; 1048576; normal   ")     # 32768
+			asDisks+=("Fun1   ; 1048576; normal   ")
+			asDisks+=("Fun2   ; 1048576; normal   ")
 		}
 		
 		local iDisk=0
@@ -141,7 +146,9 @@ function Create ()
 			local asSubDisks=()
 			{
 				IFS=";" read -r -a asSubDisks <<< "${sDisk}"
-				
+			}
+			
+			{
 				if ((0)); then
 					local sSubDisk
 					for sSubDisk in "${asSubDisks[@]}"; do
@@ -157,9 +164,9 @@ function Create ()
 				local sDiskType="${asSubDisks[2]?Bad entry in asDisks !}"; sDiskType="${sDiskType##*( )}"; sDiskType="${sDiskType%%*( )}"
 				printf "##     %-16s %'9u %s\n" "\"${sDiskName}\"" "${sDiskSize}" "\"${sDiskType}\""
 				
-				${sVBoxManage} closemedium  disk                                                 "${sName}/${sDiskName}.vmdk" --delete >/dev/null 2>&1 || true
-				${sVBoxManage} createmedium disk --format "VMDK" --variant "Standard" --filename "${sName}/${sDiskName}.vmdk" --size "${sDiskSize}"
-				${sVBoxManage} storageattach "${sName}" --storagectl "SATA" --port "${iDisk}" --type "hdd" --medium "${sName}/${sDiskName}.vmdk" --mtype "\"${sDiskType}\""
+				${sVBoxManage} closemedium  disk                                                "${sName}/${sDiskName}.vdi" --delete >/dev/null 2>&1 || true
+				${sVBoxManage} createmedium disk --format "VDI" --variant "Standard" --filename "${sName}/${sDiskName}.vdi" --size "${sDiskSize}"
+				${sVBoxManage} storageattach "${sName}" --storagectl "SATA" --port "${iDisk}" --type "hdd" --medium "${sName}/${sDiskName}.vdi" --mtype "\"${sDiskType}\""
 			}
 			
 			((++iDisk))
@@ -169,8 +176,27 @@ function Create ()
 	fi
 	
 	
+	cat <<-'EOF'
+		echo
+		## The virtual machine sub-folder has been created in the folder configured for VirtualBox.
+		##
+		## But the sub-folder with the disks is in the current folder.
+		## In order to move the disks:
+		##   - please start VirtualBox without starting the virtual machine;
+		##   - go to (Menu) -> "File" (or the Global Tools toolbar button) -> "Virtual Media Manager";
+		##   - make sure the Hard disks tab is selected;
+		##   - right-click each individual disk and from the popup menu select "Move...".
+		##
+		## Also, in order to enable the boot logo image, please modify the generated .vbox file:
+		##     Change
+		##         <Logo fadeIn="true" fadeOut="true" displayTime="0" imagePath="Isabeau-1-cropped.bmp"/>
+		##     to
+		##         <Logo fadeIn="true" fadeOut="true" displayTime="0" imagePath="G:/VM_G/191119-015328_Deborah/Isabeau-1-cropped.bmp"/>
+		##         (of course, replacing with the full pathname of where the image resides).
+		##
+		EOF
 	
-	echo "## Hello, World !"
+	#echo "## Hello, World !"
 }
 
 function Main ()
@@ -179,4 +205,4 @@ function Main ()
 	if [ $? -ne 0 ]; then echo "## Error $? !"; fi
 }
 
-Main 2>&1 | tee _go
+echo "Bau !"
