@@ -128,15 +128,15 @@ function Create ()
 			##     This setup also allows us to make the swap partition immutable:
 			##     its virtual disk need not occupy space when the virtual machine is powered off.
 			
-			asDisks+=("Root   ; 1048576; normal   ")     # 32768
-			asDisks+=("Swap   ; 1048576; normal   ")     #  2048
-			asDisks+=("Home   ; 1048576; normal   ")     #  4096
-			#asDisks+=("DevKits; 1048576; normal   ")     # 32768
-			#asDisks+=("Work   ; 1048576; normal   ")     # 32768
-			#asDisks+=("Play   ; 1048576; normal   ")     # 32768
-			#asDisks+=("Hack   ; 1048576; normal   ")     # 32768
-			asDisks+=("Fun1   ; 1048576; normal   ")
-			asDisks+=("Fun2   ; 1048576; normal   ")
+			asDisks+=("Root   ; 1572864; normal   ")     # 32768
+			asDisks+=("Swap   ; 1572864; normal   ")     #  2048
+			asDisks+=("Home   ; 1572864; normal   ")     #  4096
+			#asDisks+=("DevKits; 1572864; normal   ")     # 32768
+			#asDisks+=("Work   ; 1572864; normal   ")     # 32768
+			#asDisks+=("Play   ; 1572864; normal   ")     # 32768
+			#asDisks+=("Hack   ; 1572864; normal   ")     # 32768
+			asDisks+=("Fun1   ; 1572864; normal   ")
+			asDisks+=("Fun2   ; 1572864; normal   ")
 		}
 		
 		local iDisk=0
