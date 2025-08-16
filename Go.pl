@@ -120,7 +120,7 @@ sub Main
 		my $iDisk = 0;
 		foreach my $rasDisk (@arasDisks)
 		{
-			my ($sDiskName, $nDiskSize, $sDiskType) = ($$rasDisk [0], $$rasDisk [1], $$rasDisk [2]);
+			my ($sDiskName, $nDiskSize, $sDiskType) = @$rasDisk;
 			printf ("## Disk %2u (\"/dev/sd%s\" ?): %-16s %10u %s.\n", $iDisk, chr (ord ("a") + $iDisk), $sDiskName, $nDiskSize, $sDiskType);
 			
 			print ("${sVBoxManage} closemedium  disk \"${sName}/${sDiskName}.vdi\" --delete >/dev/null 2>&1 || true\n");
