@@ -135,7 +135,7 @@ sub Main
 		print ("\n");
 	}
 	
-	print << 'EOF';
+	print (<<'EOF');
 echo
 echo 'The virtual machine sub-folder has been created in the folder configured for VirtualBox.'
 echo ''
@@ -159,7 +159,6 @@ echo
 echo
 echo
 EOF
-	;
 	
 	print ("\n\n");
 	
