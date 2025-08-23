@@ -123,9 +123,9 @@ sub Main
 			my ($sDiskName, $nDiskSize, $sDiskType) = @$rasDisk;
 			printf ("## Disk %2u (\"/dev/sd%s\" ?): %-16s %10u %s.\n", $iDisk, chr (ord ("a") + $iDisk), $sDiskName, $nDiskSize, $sDiskType);
 			
-			print ("${sVBoxManage} closemedium  disk \"${sName}/${sDiskName}.vdi\" --delete >/dev/null 2>&1 || true\n");
-			print ("${sVBoxManage} createmedium disk --format \"VDI\" --variant \"Standard\" --filename \"${sName}/${sDiskName}.vdi\" --size \"${nDiskSize}\"\n");
-			print ("${sVBoxManage} storageattach \"${sName}\" --storagectl \"SATA\" --port \"${iDisk}\" --type \"hdd\" --medium \"${sName}/${sDiskName}.vdi\" --mtype \"${sDiskType}\"\n");
+			print ("${sVBoxManage} closemedium  disk '${sName}/${sDiskName}.vdi' --delete &>/dev/null || true\n");
+			print ("${sVBoxManage} createmedium disk --format 'VDI' --variant 'Standard' --filename '${sName}/${sDiskName}.vdi' --size '${nDiskSize}'\n");
+			print ("${sVBoxManage} storageattach '${sName}' --storagectl 'SATA' --port '${iDisk}' --type 'hdd' --medium '${sName}/${sDiskName}.vdi' --mtype '${sDiskType}'\n");
 			
 			print ("\n");
 			
