@@ -136,28 +136,38 @@ sub Main
 	}
 	
 	print (<<'EOF');
-echo
-echo 'The virtual machine sub-folder has been created in the folder configured for VirtualBox.'
-echo ''
-echo 'But the sub-folder with the disks is in the current folder.'
-echo 'In order to move the disks:'
-echo '  - please start VirtualBox without starting the virtual machine;'
-echo '  - go to (Menu) -> "File" (or the Global Tools toolbar button) -> "Virtual Media Manager";'
-echo '  - make sure the Hard disks tab is selected;'
-echo '  - right-click each individual disk and from the popup menu select "Move...".'
-echo 'Alternative:'
-echo '  - move all disks to the virtual machine sub-folder;'
-echo '  - modify the <HardDisk.../> lines in the .vbox file.'
-echo ''
-echo 'Also, in order to enable the boot logo image, please modify the generated .vbox file:'
-echo '    Change'
-echo '        <Logo fadeIn="true" fadeOut="true" displayTime="0" imagePath="Isabeau-1-cropped.bmp"/>'
-echo '    to'
-echo '        <Logo fadeIn="true" fadeOut="true" displayTime="0" imagePath="G:/VM_G/191119-015328_Deborah/Isabeau-1-cropped.bmp"/>'
-echo '        (of course, replacing with the full pathname of where the image resides).'
-echo
-echo
-echo
+cat <<-'EOF_BASH'
+	The virtual machine sub-folder has been created in the folder configured for VirtualBox.
+	
+	But the sub-folder with the disks is in the current folder.
+	
+	In order to move the disks, we have to:
+	  - start VirtualBox without starting the virtual machine;
+	  - navigate to (Menu) -> "File" (or the Global Tools toolbar button) -> "Tools" -> "Virtual Media Manager";
+	  - make sure the "Hard disks" tab is selected;
+	  - right-click each individual disk and (from the popup menu) select "Move...".
+	
+	Alternatively, we can:
+	  - move all disks to the virtual machine sub-folder;
+	  - modify the `<HardDisk.../>` lines in the `.vbox` file (so they only specify the relative pathname).
+	
+	In order to enable the boot logo image, we have to modify the generated `.vbox` file:
+	
+	  We change:
+	  
+	    ```
+	    <Logo fadeIn="true" fadeOut="true" displayTime="0" imagePath="Isabeau-1-cropped.bmp"/>
+	    ```
+	  
+	  to
+	  
+	    ```
+	    <Logo fadeIn="true" fadeOut="true" displayTime="0" imagePath="G:/VM_G/191119-015328_Deborah/Isabeau-1-cropped.bmp"/>
+	    ```
+	  
+	  (of course, using the full pathname of where the image actually resides on our computer).
+	
+	EOF_BASH
 EOF
 	
 	print ("\n\n");
