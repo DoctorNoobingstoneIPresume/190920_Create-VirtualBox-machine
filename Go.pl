@@ -1,4 +1,132 @@
 #!/usr/bin/env perl
+
+
+{
+# [2025-08-28]
+#   We steal from the `221227_PerlLib_02h` Project...
+package Util;
+use Exporter qw (import);
+our @EXPORT = qw
+(
+	Die Croak Warn
+	Azzert
+	IsHashOrObject
+	GetOrSetObjectProperty
+);
+
+use strict; use warnings;
+
+sub Die
+{
+	{ use IO::Handle; STDOUT->flush (); }
+	die (@_);
+}
+
+sub Croak
+{
+	{ use IO::Handle; STDOUT->flush (); }
+	{ use Carp; croak (@_); }
+}
+
+sub Warn
+{
+	{ use IO::Handle; STDOUT->flush (); }
+	warn (@_);
+}
+
+sub Azzert
+{
+	my $bCondition = shift;
+	
+	if (! $bCondition)
+	{
+		my $sMessage = shift;
+		{
+			if (! defined ($sMessage))
+			{
+				$sMessage = 'No message.';
+			}
+		}
+		
+		&Croak ("Error: Azzertion has failed. ${sMessage}");
+	}
+	
+	return $bCondition;
+}
+
+sub IsHashOrObject
+{
+	my $self = @_ ? shift : &Azzert ();
+	eval { sub f { my $self = shift; return scalar keys %$self; } &f ($self); };
+	return ! length ($@);
+}
+
+sub GetOrSetObjectProperty
+{
+	my $sProperty = @_ ? shift : &Azzert (); &Azzert (ref $sProperty eq '');
+	my $self      = @_ ? shift : &Azzert (); &Azzert (&IsHashOrObject ($self));
+	
+	if (@_)
+	{
+		my $value = shift;
+		$self->{$sProperty} = $value;
+		return $self;
+	}
+	else
+	{
+		return $self->{$sProperty};
+	}
+}
+
+1;
+}
+
+
+{
+# [2025-08-29]
+#   We steal from the `221227_PerlLib_02h` Project...
+package DestroyGuard;
+Util->import ();
+use strict; use warnings;
+
+sub CreateObject
+{
+	my $sClassName = @_ ? shift : &Azzert ();
+	
+	my $self =
+	{
+		'rfnOnDestroy' => shift
+	};
+	
+	return bless ($self, $sClassName);
+}
+
+sub OnDestroy
+{
+	return &GetOrSetObjectProperty ('rfnOnDestroy', @_);
+}
+
+sub DESTROY
+{
+	my $self = @_ ? shift : &Azzert ();
+	
+	my $ks  = 'rfnOnDestroy';
+	my $rfn = $self->{$ks};
+	
+	if (defined ($rfn))
+	{
+		&Azzert (ref $rfn eq 'CODE');
+		$rfn->($self, @_);
+	}
+}
+
+1;
+}
+
+
+package main;
+DestroyGuard->import ();
+Util        ->import ();
 use strict; use warnings;
 
 ## [2022-07-09]
@@ -36,28 +164,29 @@ sub Main
 	if (-d "${sName}/")
 	{
 		print ("## Unregistering machine \"${sName}\"...\n");
+		print ("## {\n"); my $g0 = DestroyGuard->CreateObject (sub { print ("## }\n\n"); });
 		print ("${sVBoxManage} unregistervm \"${sName}\" || true\n");
 		print ("mv \"${sName}/\" \"${sName}_${stimeUse}/\"\n");
-		print ("\n");
 	}
 	
 	if (1)
 	{
 		print ("## Creating machine \"${sName}\"...\n");
+		print ("## {\n"); my $g0 = DestroyGuard->CreateObject (sub { print ("## }\n\n"); });
 		print ("${sVBoxManage} createvm --name \"${sName}\" --ostype \"Debian_64\" --register\n");
-		print ("\n");
 	}
 	
 	if (1)
 	{
 		print ("## Showing...\n");
+		print ("## {\n"); my $g0 = DestroyGuard->CreateObject (sub { print ("## }\n\n"); });
 		print ("${sVBoxManage} showvminfo \"${sName}\"\n");
-		print ("\n");
 	}
 	
 	if (1)
 	{
 		print ("## Modifying...\n");
+		print ("## {\n"); my $g0 = DestroyGuard->CreateObject (sub { print ("## }\n\n"); });
 		print
 		(
 			"${sVBoxManage} modifyvm \"${sName}\" \\\n" .
@@ -79,8 +208,7 @@ sub Main
 			"    --boot4                      none                            \\\n" .
 			"\n" .
 			"${sVBoxManage} storagectl \"${sName}\" --name \"IDE\"  --add \"ide\"\n" .
-			"${sVBoxManage} storagectl \"${sName}\" --name \"SATA\" --add \"sata\"\n" .
-			"\n"
+			"${sVBoxManage} storagectl \"${sName}\" --name \"SATA\" --add \"sata\"\n"
 		);
 	}
 	
@@ -122,13 +250,14 @@ sub Main
 		{
 			my ($sDiskName, $nDiskSize, $sDiskType) = @$rasDisk;
 			printf ("## Disk %2u (\"/dev/sd%s\" ?): %-16s %10u %s.\n", $iDisk, chr (ord ("a") + $iDisk), $sDiskName, $nDiskSize, $sDiskType);
+			printf ("## {\n"); my $g0 = DestroyGuard->CreateObject (sub { printf ("## }\n\n"); });
 			
 			print ("${sVBoxManage} closemedium  disk '${sName}/${sDiskName}.vdi' --delete &>/dev/null || true\n");
 			print ("${sVBoxManage} createmedium disk --format 'VDI' --variant 'Standard' --filename '${sName}/${sDiskName}.vdi' --size '${nDiskSize}'\n");
 			print ("${sVBoxManage} storageattach '${sName}' --storagectl 'SATA' --port '${iDisk}' --type 'hdd' --medium '${sName}/${sDiskName}.vdi' --mtype '${sDiskType}'\n");
-			
-			print ("\n");
-			
+		}
+		continue
+		{
 			++$iDisk;
 		}
 		
