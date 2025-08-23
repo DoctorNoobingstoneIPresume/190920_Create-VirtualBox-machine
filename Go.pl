@@ -111,7 +111,7 @@ sub Main
 		
 		my @arasDisks = map
 		{
-			[$_, 1572864, "normal"]
+			[$_, 2097152, "normal"]
 		}
 		(
 			"Root", "Swap", "Home", "Fun0", "Fun1"
