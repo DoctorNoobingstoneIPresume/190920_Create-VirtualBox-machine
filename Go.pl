@@ -8,6 +8,7 @@ package Util;
 use Exporter qw (import);
 our @EXPORT = qw
 (
+	printf_2
 	Die Croak Warn
 	Azzert
 	IsHashOrObject
@@ -15,6 +16,12 @@ our @EXPORT = qw
 );
 
 use strict; use warnings;
+
+sub printf_2
+{
+	{ use IO::Handle; STDOUT->flush (); }
+	return printf STDERR (@_);
+}
 
 sub Die
 {
@@ -124,7 +131,109 @@ sub DESTROY
 }
 
 
+{
+package Config;
+DestroyGuard->import ();
+Util        ->import ();
+use strict; use warnings;
+
+sub CreateObject
+{
+	my $sClassName = @_ ? shift : &Azzert ();
+	
+	my $sMachineName;
+	{
+		use POSIX qw (strftime);
+		my @aiTimeParts = localtime ();
+		$sMachineName = strftime ('%y%m%d-%H%M_SyndiVM', @aiTimeParts);
+	}
+	
+	my $self =
+	{
+		'iDebugLevel'  => 0,
+		'sMachineName' => $sMachineName,
+		'sOSType'      => 'Debian_64',
+		'nmibMemory'   => 512,
+		'nCPUCores'    => 1,
+		'nFunDisks'    => 2
+	};
+	
+	return bless ($self, $sClassName);
+}
+
+sub DebugLevel  { return &GetOrSetObjectProperty ('iDebugLevel' , @_); }
+sub MachineName { return &GetOrSetObjectProperty ('sMachineName', @_); }
+sub OSType      { return &GetOrSetObjectProperty ('sOSType'     , @_); }
+sub NrMiBMemory { return &GetOrSetObjectProperty ('nmibMemory'  , @_); }
+sub NrCPUCores  { return &GetOrSetObjectProperty ('nCPUCores'   , @_); }
+sub NrFunDisks  { return &GetOrSetObjectProperty ('nFunDisks'   , @_); }
+
+sub ProcessCmdLine
+{
+	my $self = @_ ? shift : &Azzert ();
+	
+	my $nsArgs = scalar (@_);
+	
+	my $sPending;
+	my $isArg  = 0;
+	foreach my $sArg (@_)
+	{
+		if (defined ($sPending))
+		{
+			if    ($sPending =~ m/^debug(-level)$/  ) { $self->DebugLevel  ($sArg); }
+			elsif ($sPending =~ m/^(machine-)?name$/) { $self->MachineName ($sArg); }
+			elsif ($sPending =~ m/^os-type$/        ) { $self->OSType      ($sArg); }
+			elsif ($sPending =~ m/^memory(-size)?$/ ) { $self->NrMiBMemory ($sArg); }
+			elsif ($sPending =~ m/^(nr-)?cores$/    ) { $self->NrCPUCores  ($sArg); }
+			elsif ($sPending =~ m/^(nr-)fun-disks$/ ) { $self->NrFunDisks  ($sArg); }
+			else                                      { &Azzert (0); }
+			
+			$sPending = undef;
+		}
+		else
+		{
+			if ($sArg =~ m/^-+(.*)$/)
+			{
+				my $sOption = $1;
+				
+				if    ($sOption =~ m/^(debug(-level)|(machine-)?name|os-type|memory(-size)?|(nr-)?cores|(nr-)?fun-disks)$/)
+				{
+					$sPending = $sOption;
+				}
+				else
+				{
+					printf_2 ("Error: Unexpected option: %s.\n", "`${sArg}`");
+					return 0;
+				}
+			}
+			else
+			{
+				printf_2 ("Error: Unexpected cmdline arg: %s.\n", "`${sArg}`");
+				return 0;
+			}
+		}
+	}
+	continue
+	{
+		++$isArg;
+	}
+	
+	return 1;
+}
+
+sub ToString
+{
+	my $self = @_ ? shift : &Azzert ();
+	
+	return join (', ', map { sprintf ('%s %s', $_, $self->{$_}); } sort keys %$self);
+}
+
+1;
+}
+
+
 package main;
+Config      ->import ();
 DestroyGuard->import ();
 Util        ->import ();
 use strict; use warnings;
@@ -147,6 +256,21 @@ use strict; use warnings;
 
 sub Main
 {
+	my $config = Config->CreateObject ();
+	{
+		my $bResult = $config->ProcessCmdLine (@_);
+		if (! $bResult)
+		{
+			printf_2 ("Error: Config::ProcessCmdLine has failed !!\n");
+			exit (130);
+		}
+	}
+	
+	if (1)
+	{
+		printf ("## Config: %s.\n", $config->ToString ());
+	}
+	
 	my ($stimeNow) = @_;
 	{
 		if (! $stimeNow)
@@ -157,6 +281,7 @@ sub Main
 	}
 	
 	my $stimeUse = $stimeNow;
+	
 	my $sName = "${stimeUse}_SyndiVM";
 	
 	my $sVBoxManage = "VBoxManage";
