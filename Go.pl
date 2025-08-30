@@ -274,7 +274,7 @@ sub Main
 		printf ("## Config: %s.\n", $config->ToString ());
 	}
 	
-	my $sName = "${stimeUse}_SyndiVM";
+	my $sName = $config->MachineName ();
 	
 	my $sVBoxManage = "VBoxManage";
 	
