@@ -140,18 +140,12 @@ use strict; use warnings;
 sub CreateObject
 {
 	my $sClassName = @_ ? shift : &Azzert ();
-	
-	my $sMachineName;
-	{
-		use POSIX qw (strftime);
-		my @aiTimeParts = localtime ();
-		$sMachineName = strftime ('%y%m%d-%H%M_SyndiVM', @aiTimeParts);
-	}
+	my $stimeUse   = @_ ? shift : sub { use POSIX qw (strftime); my @ai = localtime (); return strftime ('%y%m%d-%H%M', @ai); }->();
 	
 	my $self =
 	{
 		'iDebugLevel'  => 0,
-		'sMachineName' => $sMachineName,
+		'sMachineName' => "${stimeUse}_SyndiVM",
 		'sOSType'      => 'Debian_64',
 		'nmibMemory'   => 512,
 		'nCPUCores'    => 1,
@@ -256,7 +250,16 @@ use strict; use warnings;
 
 sub Main
 {
-	my $config = Config->CreateObject ();
+	my $stimeNow;
+	{
+		use POSIX qw (strftime);
+		my @aiTimeParts = localtime ();
+		$stimeNow = strftime ('%y%m%d-%H%M', @aiTimeParts);
+	}
+	
+	my $stimeUse = $stimeNow;
+	
+	my $config = Config->CreateObject ($stimeUse);
 	{
 		my $bResult = $config->ProcessCmdLine (@_);
 		if (! $bResult)
@@ -270,17 +273,6 @@ sub Main
 	{
 		printf ("## Config: %s.\n", $config->ToString ());
 	}
-	
-	my ($stimeNow) = @_;
-	{
-		if (! $stimeNow)
-		{
-			$stimeNow = `date +"%y%m%d-%H%M"`;
-			chomp ($stimeNow);
-		}
-	}
-	
-	my $stimeUse = $stimeNow;
 	
 	my $sName = "${stimeUse}_SyndiVM";
 	
