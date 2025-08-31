@@ -13,6 +13,7 @@ our @EXPORT = qw
 	Azzert
 	IsHashOrObject
 	GetOrSetObjectProperty
+	QuoteArg QuoteArgs
 );
 
 use strict; use warnings;
@@ -83,6 +84,25 @@ sub GetOrSetObjectProperty
 	{
 		return $self->{$sProperty};
 	}
+}
+
+sub QuoteArg
+{
+	my $sArg = @_ ? shift : &Azzert ();
+	
+	if (! length ($sArg) || $sArg =~ m#[[:space:]\\\'\"\`\!\@\$\&\*\?(){}<>]#)
+	{
+		$sArg =~ s#\'#\'\\\'\'#g;
+		$sArg = "'${sArg}'";
+	}
+	
+	return $sArg;
+}
+
+sub QuoteArgs
+{
+	my $rasArgs = @_ ? shift : &Azzert (); { Azzert (ref $rasArgs eq 'ARRAY'); }
+	return join (' ', map { &QuoteArg ($_); } @$rasArgs);
 }
 
 1;
@@ -304,29 +324,113 @@ sub Main
 	{
 		print ("## Modifying...\n");
 		print ("## {\n"); my $g0 = DestroyGuard->CreateObject (sub { print ("## }\n\n"); });
-		print
+		
+		my $sModifyOptions = '';
+		{
+			my @aras =
+			(
+				['--memory'             , 2048                         ],
+				['--vram'               , 32                           ],
+				['--ioapic'             , 'on'                         ],
+				['--rtcuseutc'          , 'on'                         ],
+				['--cpus'               , 2                            ],
+				['--accelerate2dvideo'  , 'off'                        ],
+				['--accelerate3d'       , 'on'                         ],
+				['--clipboard'          , 'bidirectional'              ],
+				['--draganddrop'        , 'bidirectional'              ],
+				['--bioslogoimagepath'  , 'Media/Isabeau-1-cropped.bmp'],
+				['--boot1'              , 'none'                       ],
+				['--boot2'              , 'dvd'                        ],
+				['--boot3'              , 'disk'                       ],
+				['--boot4'              , 'none'                       ]
+			);
+			
+			use List::Util qw (reduce max);
+			
+			my $raccmax = reduce
+			{
+				[
+					max ($a->[0], length (&QuoteArg ($b->[0]))),
+					max ($a->[1], length (&QuoteArg ($b->[1])))
+				]
+			}
+			([0, 0], @aras);
+			
+			$sModifyOptions = join
+			(
+				'',
+				
+				map
+				{
+					sprintf
+					(
+						"    %-*s %-*s \\\n",
+						$raccmax->[0], &QuoteArg ($_->[0]),
+						$raccmax->[1], &QuoteArg ($_->[1])
+					)
+				}
+				(@aras)
+			);
+		}
+		
+		printf
 		(
-			"${sVBoxManage} modifyvm \"${sName}\" \\\n" .
-			"    --memory                     2048                            \\\n" .
-			"    --vram                         32                            \\\n" .
-			"    --ioapic                     on                              \\\n" .
-			"    --rtcuseutc                  on                              \\\n" .
-			"    --cpus                          2                            \\\n" .
-			"    --accelerate2dvideo          off                             \\\n" .
-			"    --accelerate3d               on                              \\\n" .
-			"    \\\n" .
-			"    --clipboard                  bidirectional                   \\\n" .
-			"    --draganddrop                bidirectional                   \\\n" .
-			"    \\\n" .
-			"    --bioslogoimagepath          \"Media/Isabeau-1-cropped.bmp\"   \\\n" .
-			"    --boot1                      none                            \\\n" .
-			"    --boot2                      dvd                             \\\n" .
-			"    --boot3                      disk                            \\\n" .
-			"    --boot4                      none                            \\\n" .
-			"\n" .
-			"${sVBoxManage} storagectl \"${sName}\" --name \"IDE\"  --add \"ide\"\n" .
-			"${sVBoxManage} storagectl \"${sName}\" --name \"SATA\" --add \"sata\"\n"
+			"%s modifyvm %s \\\n%s\n",
+			$sVBoxManage,
+			"'${sName}'",
+			$sModifyOptions
 		);
+		
+		{
+			my @aras =
+			(
+				['IDE' , 'ide' ],
+				['SATA', 'sata']
+			);
+			
+			use List::Util qw (reduce max);
+			
+			my ($ccmax0, $ccmax1) =
+				@
+				{
+				(
+					reduce
+					{
+						[
+							max ($a->[0], length ($b->[0])),
+							max ($a->[1], length ($b->[1]))
+						];
+					}
+					(
+						[0, 0],
+						@aras
+					)
+				)
+				};
+			
+			printf ("## ccmax0 %2u, ccmax1 %2u.\n", $ccmax0, $ccmax1);
+			
+			printf
+			(
+				'%s',
+				join
+				(
+					'',
+					map
+					{
+						sprintf
+						(
+							"%s storagectl %s --name %-*s --add %-*s\n",
+							$sVBoxManage,
+							"'${sName}'",
+							$ccmax0 + 2, "'" . $_->[0] . "'",
+							$ccmax1 + 2, "'" . $_->[1] . "'"
+						)
+					}
+					(@aras)
+				)
+			);
+		}
 	}
 	
 	if (1)
