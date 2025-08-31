@@ -347,26 +347,29 @@ sub Main
 			
 			use List::Util qw (reduce max);
 			
-			my $raccmax = reduce
-			{
-				[
-					max ($a->[0], length (&QuoteArg ($b->[0]))),
-					max ($a->[1], length (&QuoteArg ($b->[1])))
-				]
-			}
-			([0, 0], @aras);
+			my @accmax =
+				map
+				{
+					my $index = $_;
+					
+					reduce
+					{
+						max ($a, length (&QuoteArg ($b->[$index])))
+					}
+					(0, @aras)
+				}
+				(0, 1);
 			
 			$sModifyOptions = join
 			(
-				'',
-				
+				" \\\n",
 				map
 				{
 					sprintf
 					(
-						"    %-*s %-*s \\\n",
-						$raccmax->[0], &QuoteArg ($_->[0]),
-						$raccmax->[1], &QuoteArg ($_->[1])
+						'    %-*s %-*s',
+						$accmax [0], &QuoteArg ($_->[0]),
+						$accmax [1], &QuoteArg ($_->[1])
 					)
 				}
 				(@aras)
@@ -375,7 +378,7 @@ sub Main
 		
 		printf
 		(
-			"%s modifyvm %s \\\n%s\n",
+			"%s modifyvm %s \\\n%s\n\n",
 			$sVBoxManage,
 			"'${sName}'",
 			$sModifyOptions
@@ -390,25 +393,17 @@ sub Main
 			
 			use List::Util qw (reduce max);
 			
-			my ($ccmax0, $ccmax1) =
-				@
+			my @accmax =
+				map
 				{
-				(
+					my $index = $_;
 					reduce
 					{
-						[
-							max ($a->[0], length ($b->[0])),
-							max ($a->[1], length ($b->[1]))
-						];
+						max ($a, length (&QuoteArg ($b->[$index])))
 					}
-					(
-						[0, 0],
-						@aras
-					)
-				)
-				};
-			
-			printf ("## ccmax0 %2u, ccmax1 %2u.\n", $ccmax0, $ccmax1);
+					(0, @aras)
+				}
+				(0, 1);
 			
 			printf
 			(
@@ -423,8 +418,8 @@ sub Main
 							"%s storagectl %s --name %-*s --add %-*s\n",
 							$sVBoxManage,
 							"'${sName}'",
-							$ccmax0 + 2, "'" . $_->[0] . "'",
-							$ccmax1 + 2, "'" . $_->[1] . "'"
+							$accmax [0], &QuoteArg ($_->[0]),
+							$accmax [1], &QuoteArg ($_->[1])
 						)
 					}
 					(@aras)
