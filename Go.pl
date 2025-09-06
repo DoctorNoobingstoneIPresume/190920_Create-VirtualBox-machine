@@ -434,30 +434,55 @@ sub Main
 	
 	if (-d "${sName}/")
 	{
-		print ("## Unregistering machine \"${sName}\"...\n");
-		print ("## {\n"); my $g0 = DestroyGuard->CreateObject (sub { print ("## }\n\n"); });
-		print ("${sVBoxManage} unregistervm \"${sName}\" || true\n");
-		print ("mv \"${sName}/\" \"${sName}_${stimeUse}/\"\n");
+		printf ("## Unregistering machine %s...\n", &QuoteArg ($sName));
+		printf ("## {\n"); my $g0 = DestroyGuard->CreateObject (sub { printf ("## }\n\n"); });
+		
+		printf
+		(
+			"%s unregistervm %s || true\n",
+			&QuoteArg ($sVBoxManage),
+			&QuoteArg ($sName)
+		);
+		
+		printf
+		(
+			"mv %s %s\n",
+			&QuoteArg ("${sName}/"),
+			&QuoteArg ("${sName}_${stimeUse}/")
+		);
 	}
 	
 	if (1)
 	{
-		print ("## Creating machine \"${sName}\"...\n");
-		print ("## {\n"); my $g0 = DestroyGuard->CreateObject (sub { print ("## }\n\n"); });
-		print ("${sVBoxManage} createvm --name \"${sName}\" --ostype \"Debian_64\" --register\n");
+		printf ("## Creating machine %s...\n", &QuoteArg ($sName));
+		printf ("## {\n"); my $g0 = DestroyGuard->CreateObject (sub { printf ("## }\n\n"); });
+		
+		printf
+		(
+			"%s createvm --name %s --ostype %s --register\n",
+			&QuoteArg ($sVBoxManage),
+			&QuoteArg ($sName),
+			&QuoteArg ('Debian_64')
+		);
 	}
 	
 	if (1)
 	{
-		print ("## Showing...\n");
-		print ("## {\n"); my $g0 = DestroyGuard->CreateObject (sub { print ("## }\n\n"); });
-		print ("${sVBoxManage} showvminfo \"${sName}\"\n");
+		printf ("## Showing machine %s...\n", &QuoteArg ($sName));
+		printf ("## {\n"); my $g0 = DestroyGuard->CreateObject (sub { printf ("## }\n\n"); });
+		
+		printf
+		(
+			"%s showvminfo %s\n",
+			&QuoteArg ($sVBoxManage),
+			&QuoteArg ($sName)
+		);
 	}
 	
 	if (1)
 	{
-		print ("## Modifying...\n");
-		print ("## {\n"); my $g0 = DestroyGuard->CreateObject (sub { print ("## }\n\n"); });
+		printf ("## Modifying...\n");
+		printf ("## {\n"); my $g0 = DestroyGuard->CreateObject (sub { printf ("## }\n\n"); });
 		
 		my $sModifyOptions = '';
 		{
@@ -513,8 +538,8 @@ sub Main
 		printf
 		(
 			"%s modifyvm %s \\\n%s\n\n",
-			$sVBoxManage,
-			"'${sName}'",
+			&QuoteArg ($sVBoxManage),
+			&QuoteArg ($sName),
 			$sModifyOptions
 		);
 		
@@ -550,8 +575,8 @@ sub Main
 						sprintf
 						(
 							"%s storagectl %s --name %-*s --add %-*s\n",
-							$sVBoxManage,
-							"'${sName}'",
+							&QuoteArg ($sVBoxManage),
+							&QuoteArg ($sName),
 							$accmax [0], &QuoteArg ($_->[0]),
 							$accmax [1], &QuoteArg ($_->[1])
 						)
@@ -658,10 +683,10 @@ sub Main
 			);
 		}
 		
-		print ("\n");
+		printf ("\n");
 	}
 	
-	print (<<'EOF');
+	printf ('%s', <<'EOF');
 cat <<-'EOF_BASH'
 	The virtual machine sub-folder has been created in the folder configured for VirtualBox.
 	
@@ -696,7 +721,7 @@ cat <<-'EOF_BASH'
 	EOF_BASH
 EOF
 	
-	print ("\n\n");
+	printf ("\n\n");
 	
 	return 1;
 }
