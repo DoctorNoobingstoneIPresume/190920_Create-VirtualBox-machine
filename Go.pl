@@ -324,7 +324,47 @@ EOT
 }
 
 
+{
+package Disk;
+Util->import ();
+use strict; use warnings;
+
+sub CreateObject
+{
+	my $sClassName = @_ ? shift : &Azzert ();
+	
+	my $self =
+	{
+		'sName'    => @_ ? shift : 'Untitled Disk',
+		'nmibSize' => @_ ? shift : 2097152,
+		'sType'    => @_ ? shift : 'normal'
+	};
+	
+	return bless ($self, $sClassName);
+}
+
+sub Name      { return &GetOrSetObjectProperty ('sName'   , @_); }
+sub NrMiBSize { return &GetOrSetObjectProperty ('nmibSize', @_); }
+sub Type      { return &GetOrSetObjectProperty ('sType'   , @_); }
+
+sub ToString
+{
+	my $self = @_ ? shift : &Azzert ();
+	
+	return sprintf
+	(
+		'name %-16s, size-in-MiB %9u, type %-16s',
+		"'" . $self->Name      () . "'",
+		      $self->NrMiBSize (),
+		"'" . $self->Type      () . "'"
+	);
+}
+
+1;
+}
+
 package main;
+Disk        ->import ();
 Config      ->import ();
 DestroyGuard->import ();
 Util        ->import ();
@@ -518,7 +558,7 @@ sub Main
 	
 	if (1)
 	{
-		print ("## Disks:\n");
+		printf ("## Disks:\n{\n"); my $g0 = DestroyGuard->CreateObject (sub { printf ("}\n\n"); });
 		
 		## [2020-08-24]
 		## 
@@ -541,28 +581,68 @@ sub Main
 		##     This setup also allows us to make the swap partition immutable:
 		##     its virtual disk need not occupy space when the virtual machine is powered off.
 		
-		my @arasDisks = map
+		my @arDisks = map
 		{
-			[$_, 2097152, "normal"]
+			Disk->CreateObject ($_, 2 * 1024 * 1024, 'normal')
 		}
 		(
 			"Root", "Swap", "Home", "Fun0", "Fun1"
 		);
 		
-		my $iDisk = 0;
-		foreach my $rasDisk (@arasDisks)
+		my $rfnMakeDiskFullName = sub
 		{
-			my ($sDiskName, $nDiskSize, $sDiskType) = @$rasDisk;
-			printf ("## Disk %2u (\"/dev/sd%s\" ?): %-16s %10u %s.\n", $iDisk, chr (ord ("a") + $iDisk), $sDiskName, $nDiskSize, $sDiskType);
-			printf ("## {\n"); my $g0 = DestroyGuard->CreateObject (sub { printf ("## }\n\n"); });
+			my $sDiskName = @_ ? shift : &Azzert ();
+			return "${sName}/${sDiskName}.vdi";
+		};
+		
+		use List::Util qw (reduce max);
+		my $ccmaxDiskFullName =
+			reduce
+			{
+				max ($a, length (&QuoteArg ($rfnMakeDiskFullName->($b->Name ()))))
+			}
+			(32, @arDisks);
+		
+		for (my $iDisk = 0; $iDisk < scalar (@arDisks); ++$iDisk)
+		{
+			my $rDisk = $arDisks [$iDisk];
 			
-			print ("${sVBoxManage} closemedium  disk '${sName}/${sDiskName}.vdi' --delete &>/dev/null || true\n");
-			print ("${sVBoxManage} createmedium disk --format 'VDI' --variant 'Standard' --filename '${sName}/${sDiskName}.vdi' --size '${nDiskSize}'\n");
-			print ("${sVBoxManage} storageattach '${sName}' --storagectl 'SATA' --port '${iDisk}' --type 'hdd' --medium '${sName}/${sDiskName}.vdi' --mtype '${sDiskType}'\n");
-		}
-		continue
-		{
-			++$iDisk;
+			my $sDiskName     = $rDisk->Name      ();
+			my $nDiskSize     = $rDisk->NrMiBSize ();
+			my $sDiskType     = $rDisk->Type      ();
+			my $sDiskFullName = $rfnMakeDiskFullName->($sDiskName);
+			
+			printf ("## Disk %2u ('/dev/sd%s' ?!): %s.\n", $iDisk, chr (ord ('a') + $iDisk), $rDisk->ToString ());
+			printf ("## {\n"); my $g1 = DestroyGuard->CreateObject (sub { printf ("## }\n\n"); });
+			
+			printf
+			(
+				"%s closemedium   disk %-*s --delete &>/dev/null || true\n",
+				&QuoteArg ($sVBoxManage),
+				$ccmaxDiskFullName, &QuoteArg ($sDiskFullName)
+			);
+			
+			printf
+			(
+				"%s createmedium  disk --format %s --variant %s --filename %-*s --size %9u\n",
+				&QuoteArg ($sVBoxManage),
+				&QuoteArg ('VDI'),
+				&QuoteArg ('Standard'),
+				$ccmaxDiskFullName, &QuoteArg ($sDiskFullName),
+				&QuoteArg ($nDiskSize)
+			);
+			
+			printf
+			(
+				"%s storageattach %s --storagectl %s --port %2u --type %s --medium %-*s --mtype %s\n",
+				&QuoteArg ($sVBoxManage),
+				&QuoteArg ($sName),
+				&QuoteArg ('SATA'),
+				&QuoteArg ($iDisk),
+				&QuoteArg ('hdd'),
+				$ccmaxDiskFullName, &QuoteArg ($sDiskFullName),
+				&QuoteArg ($sDiskType)
+			);
 		}
 		
 		print ("\n");
