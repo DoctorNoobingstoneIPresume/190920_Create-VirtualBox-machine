@@ -201,7 +201,7 @@ sub ProcessCmdLine
 			elsif ($sPending =~ m/^(machine-)?name$/           ) { $self->MachineName ($sArg); }
 			elsif ($sPending =~ m/^os-type$/                   ) { $self->OSType      ($sArg); }
 			elsif ($sPending =~ m/^memory(-size)?$/            ) { $self->NrMiBMemory ($sArg); }
-			elsif ($sPending =~ m/^(nr-)?cores$/               ) { $self->NrCPUCores  ($sArg); }
+			elsif ($sPending =~ m/^(nr-)?(cpus|cores|threads)$/) { $self->NrCPUCores  ($sArg); }
 			elsif ($sPending =~ m/^(nr-)fun-disks$/            ) { $self->NrFunDisks  ($sArg); }
 			else                                                 { &Azzert (0); }
 			
@@ -213,7 +213,7 @@ sub ProcessCmdLine
 			{
 				my $sOption = $1;
 				
-				if    ($sOption =~ m/^(help-level|debug(-level)|(machine-)?name|os-type|memory(-size)?|(nr-)?cores|(nr-)?fun-disks)$/)
+				if    ($sOption =~ m/^(help-level|debug(-level)|(machine-)?name|os-type|memory(-size)?|(nr-)?(cpus|cores|threads)|(nr-)?fun-disks)$/)
 				{
 					$sPending = $sOption;
 				}
@@ -252,8 +252,8 @@ sub ToString
 		['debug-level' , $self->DebugLevel  ()],
 		['machine-name', $self->MachineName ()],
 		['os-type'     , $self->OSType      ()],
-		['memory-size' , $self->NrMiBMemory ()],
-		['nr-cores'    , $self->NrCPUCores  ()],
+		['memory'      , $self->NrMiBMemory ()],
+		['nr-threads'  , $self->NrCPUCores  ()],
 		['nr-fun-disks', $self->NrFunDisks  ()]
 	);
 	
@@ -296,13 +296,12 @@ Options:
     --os-type <value>
         Sets the Operating System name.
 
-    --memory-size <n>
+    --memory <n>
         Sets the size of the Memory for the Virtual Machine (in MiB).
 
-    --nr-cores <n>
-        Sets the number of CPU Cores for the Virtual Machine.
-        Actually, this is the number of Threading Units.
-        If the Real Machine has Hyper-Threading:
+    --nr-threads <n>
+        Sets the number of Threading Units for the Virtual Machine.
+        If the Real Machine CPU has Hyper-Threading:
           each Core counts as two Threading Units.
 
     --nr-fun-disks <n>
