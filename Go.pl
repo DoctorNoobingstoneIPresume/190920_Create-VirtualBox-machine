@@ -164,6 +164,7 @@ sub CreateObject
 	
 	my $self =
 	{
+		'iHelpLevel'   => 0,
 		'iDebugLevel'  => 0,
 		'sMachineName' => "${stimeUse}_SyndiVM",
 		'sOSType'      => 'Debian_64',
@@ -175,6 +176,7 @@ sub CreateObject
 	return bless ($self, $sClassName);
 }
 
+sub HelpLevel   { return &GetOrSetObjectProperty ('iHelpLevel'  , @_); }
 sub DebugLevel  { return &GetOrSetObjectProperty ('iDebugLevel' , @_); }
 sub MachineName { return &GetOrSetObjectProperty ('sMachineName', @_); }
 sub OSType      { return &GetOrSetObjectProperty ('sOSType'     , @_); }
@@ -194,7 +196,8 @@ sub ProcessCmdLine
 	{
 		if (defined ($sPending))
 		{
-			if    ($sPending =~ m/^debug(-level)$/  ) { $self->DebugLevel  ($sArg); }
+			if    ($sPending =~ m/^help-level$/)      { $self->HelpLevel   ($sArg); }
+			elsif ($sPending =~ m/^debug(-level)$/  ) { $self->DebugLevel  ($sArg); }
 			elsif ($sPending =~ m/^(machine-)?name$/) { $self->MachineName ($sArg); }
 			elsif ($sPending =~ m/^os-type$/        ) { $self->OSType      ($sArg); }
 			elsif ($sPending =~ m/^memory(-size)?$/ ) { $self->NrMiBMemory ($sArg); }
@@ -210,9 +213,13 @@ sub ProcessCmdLine
 			{
 				my $sOption = $1;
 				
-				if    ($sOption =~ m/^(debug(-level)|(machine-)?name|os-type|memory(-size)?|(nr-)?cores|(nr-)?fun-disks)$/)
+				if    ($sOption =~ m/^(help-level|debug(-level)|(machine-)?name|os-type|memory(-size)?|(nr-)?cores|(nr-)?fun-disks)$/)
 				{
 					$sPending = $sOption;
+				}
+				elsif ($sOption =~ m/^help$/)
+				{
+					$self->HelpLevel (1);
 				}
 				else
 				{
@@ -241,6 +248,7 @@ sub ToString
 	
 	my @aras =
 	(
+		['help-level'  , $self->HelpLevel   ()],
 		['debug-level' , $self->DebugLevel  ()],
 		['machine-name', $self->MachineName ()],
 		['os-type'     , $self->OSType      ()],
@@ -256,6 +264,60 @@ sub ToString
 			{ &QuoteArg ('--' . $_->[0]) . ' ' . &QuoteArg ($_->[1]) }
 			@aras
 	);
+}
+
+sub HelpMessage
+{
+	my $self = @_ ? shift : &Azzert ();
+	
+	return sprintf ('%s', <<EOT);
+This script outputs a Bash script which, if executed,
+invokes VBoxManage in order to generate a new Virtual Machine
+configured as requested.
+
+Options:
+
+    --help-level <n>
+        Selects the help level.
+        If the help level is non-zero:
+          - this helpful help message is displayed;
+          - normal execution is not performed.
+
+    --help
+        Sets the help level to 1.
+
+    --debug-level <n>
+        Selects the debug (verbosity) level.
+        (Currently, this is not used in any way.)
+
+    --machine-name <value>
+        Sets the name of the Virtual Machine.
+
+    --os-type <value>
+        Sets the Operating System name.
+
+    --memory-size <n>
+        Sets the size of the Memory for the Virtual Machine (in MiB).
+
+    --nr-cores <n>
+        Sets the number of CPU Cores for the Virtual Machine.
+        Actually, this is the number of Threading Units.
+        If the Real Machine has Hyper-Threading:
+          each Core counts as two Threading Units.
+
+    --nr-fun-disks <n>
+        Sets the number of extra disks
+        (besides the normal disks: `root`, `swap`, `home`).
+
+The command-line arguments which would generate the current `Config`
+are helpfully output (as a shell comment).
+
+We hope that you have lots of fun in using this script !!
+>:D<
+
+
+EOT
+
 }
 
 1;
@@ -305,9 +367,19 @@ sub Main
 		}
 	}
 	
+	if ($config->HelpLevel ())
+	{
+		printf ("%s\n", $config->HelpMessage ());
+	}
+	
 	if (1)
 	{
 		printf ("## Config: %s.\n", $config->ToString ());
+	}
+	
+	if ($config->HelpLevel ())
+	{
+		return 1;
 	}
 	
 	my $sName = $config->MachineName ();
