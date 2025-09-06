@@ -462,7 +462,7 @@ sub Main
 			"%s createvm --name %s --ostype %s --register\n",
 			&QuoteArg ($sVBoxManage),
 			&QuoteArg ($sName),
-			&QuoteArg ('Debian_64')
+			&QuoteArg ($config->OSType ())
 		);
 	}
 	
