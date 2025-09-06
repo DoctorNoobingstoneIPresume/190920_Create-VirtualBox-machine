@@ -196,14 +196,14 @@ sub ProcessCmdLine
 	{
 		if (defined ($sPending))
 		{
-			if    ($sPending =~ m/^help-level$/)      { $self->HelpLevel   ($sArg); }
-			elsif ($sPending =~ m/^debug(-level)$/  ) { $self->DebugLevel  ($sArg); }
-			elsif ($sPending =~ m/^(machine-)?name$/) { $self->MachineName ($sArg); }
-			elsif ($sPending =~ m/^os-type$/        ) { $self->OSType      ($sArg); }
-			elsif ($sPending =~ m/^memory(-size)?$/ ) { $self->NrMiBMemory ($sArg); }
-			elsif ($sPending =~ m/^(nr-)?cores$/    ) { $self->NrCPUCores  ($sArg); }
-			elsif ($sPending =~ m/^(nr-)fun-disks$/ ) { $self->NrFunDisks  ($sArg); }
-			else                                      { &Azzert (0); }
+			if    ($sPending =~ m/^help-level$/                ) { $self->HelpLevel   ($sArg); }
+			elsif ($sPending =~ m/^debug(-level)$/             ) { $self->DebugLevel  ($sArg); }
+			elsif ($sPending =~ m/^(machine-)?name$/           ) { $self->MachineName ($sArg); }
+			elsif ($sPending =~ m/^os-type$/                   ) { $self->OSType      ($sArg); }
+			elsif ($sPending =~ m/^memory(-size)?$/            ) { $self->NrMiBMemory ($sArg); }
+			elsif ($sPending =~ m/^(nr-)?cores$/               ) { $self->NrCPUCores  ($sArg); }
+			elsif ($sPending =~ m/^(nr-)fun-disks$/            ) { $self->NrFunDisks  ($sArg); }
+			else                                                 { &Azzert (0); }
 			
 			$sPending = undef;
 		}
