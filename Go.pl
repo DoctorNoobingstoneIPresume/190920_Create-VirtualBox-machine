@@ -169,7 +169,7 @@ sub CreateObject
 		'sMachineName' => "${stimeUse}_SyndiVM",
 		'sOSType'      => 'Debian_64',
 		'nmibMemory'   => 512,
-		'nCPUCores'    => 1,
+		'nThreads'     => 1,
 		'nFunDisks'    => 2
 	};
 	
@@ -181,7 +181,7 @@ sub DebugLevel  { return &GetOrSetObjectProperty ('iDebugLevel' , @_); }
 sub MachineName { return &GetOrSetObjectProperty ('sMachineName', @_); }
 sub OSType      { return &GetOrSetObjectProperty ('sOSType'     , @_); }
 sub NrMiBMemory { return &GetOrSetObjectProperty ('nmibMemory'  , @_); }
-sub NrCPUCores  { return &GetOrSetObjectProperty ('nCPUCores'   , @_); }
+sub NrThreads   { return &GetOrSetObjectProperty ('nThreads'    , @_); }
 sub NrFunDisks  { return &GetOrSetObjectProperty ('nFunDisks'   , @_); }
 
 sub ProcessCmdLine
@@ -253,7 +253,7 @@ sub ToString
 		['machine-name', $self->MachineName ()],
 		['os-type'     , $self->OSType      ()],
 		['memory'      , $self->NrMiBMemory ()],
-		['nr-threads'  , $self->NrCPUCores  ()],
+		['nr-threads'  , $self->NrThreads   ()],
 		['nr-fun-disks', $self->NrFunDisks  ()]
 	);
 	
