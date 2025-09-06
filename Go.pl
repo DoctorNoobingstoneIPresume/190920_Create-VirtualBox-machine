@@ -239,7 +239,23 @@ sub ToString
 {
 	my $self = @_ ? shift : &Azzert ();
 	
-	return join (', ', map { sprintf ('%s %s', $_, $self->{$_}); } sort keys %$self);
+	my @aras =
+	(
+		['debug-level' , $self->DebugLevel  ()],
+		['machine-name', $self->MachineName ()],
+		['os-type'     , $self->OSType      ()],
+		['memory-size' , $self->NrMiBMemory ()],
+		['nr-cores'    , $self->NrCPUCores  ()],
+		['nr-fun-disks', $self->NrFunDisks  ()]
+	);
+	
+	return join
+	(
+		'  ',
+		map
+			{ &QuoteArg ('--' . $_->[0]) . ' ' . &QuoteArg ($_->[1]) }
+			@aras
+	);
 }
 
 1;
