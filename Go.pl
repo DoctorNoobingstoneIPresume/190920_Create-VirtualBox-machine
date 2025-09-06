@@ -581,13 +581,20 @@ sub Main
 		##     This setup also allows us to make the swap partition immutable:
 		##     its virtual disk need not occupy space when the virtual machine is powered off.
 		
+		my @asDiskNames = ('Root', 'Swap', 'Home');
+		{
+			use List::Util qw (min);
+			for (my ($i, $n) = (0, min ($config->NrFunDisks (), 16)); $i < $n; ++$i)
+			{
+				push (@asDiskNames, sprintf ('Fun_%02Xh', $i));
+			}
+		}
+		
 		my @arDisks = map
 		{
 			Disk->CreateObject ($_, 2 * 1024 * 1024, 'normal')
 		}
-		(
-			"Root", "Swap", "Home", "Fun0", "Fun1"
-		);
+		(@asDiskNames);
 		
 		my $rfnMakeDiskFullName = sub
 		{
