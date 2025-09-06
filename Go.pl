@@ -169,6 +169,7 @@ sub CreateObject
 		'sMachineName' => "${stimeUse}_SyndiVM",
 		'sOSType'      => 'Debian_64',
 		'nmibMemory'   => 512,
+		'nmibVRAM'     => 16,
 		'nThreads'     => 1,
 		'nFunDisks'    => 2
 	};
@@ -181,6 +182,7 @@ sub DebugLevel  { return &GetOrSetObjectProperty ('iDebugLevel' , @_); }
 sub MachineName { return &GetOrSetObjectProperty ('sMachineName', @_); }
 sub OSType      { return &GetOrSetObjectProperty ('sOSType'     , @_); }
 sub NrMiBMemory { return &GetOrSetObjectProperty ('nmibMemory'  , @_); }
+sub NrMiBVRAM   { return &GetOrSetObjectProperty ('nmibVRAM'    , @_); }
 sub NrThreads   { return &GetOrSetObjectProperty ('nThreads'    , @_); }
 sub NrFunDisks  { return &GetOrSetObjectProperty ('nFunDisks'   , @_); }
 
@@ -201,6 +203,7 @@ sub ProcessCmdLine
 			elsif ($sPending =~ m/^(machine-)?name$/           ) { $self->MachineName ($sArg); }
 			elsif ($sPending =~ m/^os-type$/                   ) { $self->OSType      ($sArg); }
 			elsif ($sPending =~ m/^memory(-size)?$/            ) { $self->NrMiBMemory ($sArg); }
+			elsif ($sPending =~ m/^vram(-size)?$/              ) { $self->NrMiBVRAM   ($sArg); }
 			elsif ($sPending =~ m/^(nr-)?(cpus|cores|threads)$/) { $self->NrCPUCores  ($sArg); }
 			elsif ($sPending =~ m/^(nr-)fun-disks$/            ) { $self->NrFunDisks  ($sArg); }
 			else                                                 { &Azzert (0); }
@@ -213,7 +216,7 @@ sub ProcessCmdLine
 			{
 				my $sOption = $1;
 				
-				if    ($sOption =~ m/^(help-level|debug(-level)|(machine-)?name|os-type|memory(-size)?|(nr-)?(cpus|cores|threads)|(nr-)?fun-disks)$/)
+				if    ($sOption =~ m/^(help-level|debug(-level)|(machine-)?name|os-type|memory(-size)?|vram(-size)?|(nr-)?(cpus|cores|threads)|(nr-)?fun-disks)$/)
 				{
 					$sPending = $sOption;
 				}
@@ -253,6 +256,7 @@ sub ToString
 		['machine-name', $self->MachineName ()],
 		['os-type'     , $self->OSType      ()],
 		['memory'      , $self->NrMiBMemory ()],
+		['vram'        , $self->NrMiBVRAM   ()],
 		['nr-threads'  , $self->NrThreads   ()],
 		['nr-fun-disks', $self->NrFunDisks  ()]
 	);
@@ -298,6 +302,9 @@ Options:
 
     --memory <n>
         Sets the size of the Memory for the Virtual Machine (in MiB).
+
+    --vram <n>
+        Sets the size of the VRAM (Video Memory) for the Virtual Machine (in MiB).
 
     --nr-threads <n>
         Sets the number of Threading Units for the Virtual Machine.
