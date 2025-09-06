@@ -463,11 +463,11 @@ sub Main
 		{
 			my @aras =
 			(
-				['--memory'             , 2048                         ],
-				['--vram'               , 32                           ],
+				['--memory'             , $config->NrMiBMemory ()      ],
+				['--vram'               , $config->NrMiBVRAM   ()      ],
 				['--ioapic'             , 'on'                         ],
 				['--rtcuseutc'          , 'on'                         ],
-				['--cpus'               , 2                            ],
+				['--cpus'               , $config->NrThreads   ()      ],
 				['--accelerate2dvideo'  , 'off'                        ],
 				['--accelerate3d'       , 'on'                         ],
 				['--clipboard'          , 'bidirectional'              ],
