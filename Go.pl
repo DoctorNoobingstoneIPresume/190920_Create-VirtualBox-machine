@@ -630,7 +630,7 @@ sub Main
 		my $rfnMakeDiskFullName = sub
 		{
 			my $sDiskName = @_ ? shift : &Azzert ();
-			return "${sName}/${sDiskName}.vdi";
+			return "${sName}/${sName}_${sDiskName}.vdi";
 		};
 		
 		use List::Util qw (reduce max);
